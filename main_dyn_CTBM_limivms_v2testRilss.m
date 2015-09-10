@@ -27,9 +27,9 @@ ENE_SELECTNEW = 0;  % new energy = 1
 
 % -------------------------------------------------------------------
 % ----- VARIABLES --------------------------------------------------
-Imax        =   1;              % Final round index
-N0          =   8*10^3;         % Iteration index [] 
-Wavg        =   1;              % dirty bit rate Mbit/sec
+Imax        =   20;              % Final round index
+N0          =   9*10^3;         % Iteration index [] 
+Wavg        =   0;              % dirty bit rate Mbit/sec
 Cmax        =   1;              % max utilizzation of the overall available basndwidth  Cmax  [0,1]
 Rmax        =   11;             % Mb/s    % Max transmission bandwidth allowed 
 K0          =   1.2;  % 1.8*10^(-3) Watt*[s/Mbit]^alfa communication pw % Power wasted for Ri 
@@ -37,11 +37,11 @@ alfa_Pw     =   2;              % exponent power-rate
 M0          =   128;            % size of memory [Mega bit] 
 Esetup      =   5.9; %3*10^-4;%; per il wifi %% energy wasted by connection setim phase Joule 
 gamma       =   1000;           % buono tra 100 e 1000
-amax        =   1;      %2*10^(-4);%5*10^(-7);% buono tra 5*10(-7) e 10^(-6)
+amax        =   0.001;      %2*10^(-4);%5*10^(-7);% buono tra 5*10(-7) e 10^(-6)
 passoTou    =   100;
 DeltaTM     =   2*10^200;%141;%2*10^300;%94.6;%21.33;%2*10^600;2*10^300;       %0.17*10^(1); % maximum tolerated Time Migration
 DeltaDT     =   10^200;%10^300;%0.1; %1.17*10^-3;%19.31;%10^600;         %11.63636364; % maximum tolerated down-time
-beta        =   10.5;            %1.05; %1.2; %beta_i(1);
+beta        =   0;            %1.05; %1.2; %beta_i(1);
 
 % ris r0 = 11 lamda 1= 0 lamda2 1689.6 
 
@@ -55,7 +55,7 @@ elseif(Imax==0)
 else
     teta = 1;
     % ----- DATI TC-BM ######
-    Q = 1;   %number of round head 
+    Q = 20;   %number of round head 
     S = Imax/Q;
     % -------------  ########
     if(Q>Imax || Q<1 || rem(Q,1)~=0 || (rem(S,1)~=0 && Imax>=1))
@@ -132,6 +132,7 @@ if Imax==-1 || Imax==0
 end
 
 Rtilde(1,:) = log(Rmax);%(Rmax+Wavg)/2);    %%%%%%%% START POINT %%%%%%%%%
+%Rtilde(1,3) = log(10^-44);
 
 % for i=0:Imax+1
 %     Rtilde(1,i+1)=log(Wavg+i*((Rmax-Wavg)/(Imax+1)));
@@ -313,7 +314,9 @@ for n = 1:N0
         (Wavg^(1+Imax)*exp((alfa_Pw-1)*Rtilde(n, bV+Imax+1)-S*Rtilde(n, bV+1)- (1-delta_f(Q-1))*S*(sumDerGrad1)) + ...+
         (1-delta_f(Imax))*( sumDerGrad2 )); 
     
-    gradRtildetemp(bV+0) = derGrad_R0 - teta*lamda_1(n)*(1/DeltaTM)*Ttm - lamda_2(n)*(1/DeltaDT)*Tdt - teta*lamda_3(n, bV+ 0)*beta*Wavg*exp(-Rtilde(n, bV+0));
+    % update aggingiamo limitazioni del gradiente 
+    limGrad = log(Rmax);
+    gradRtildetemp(bV+0) = max(-limGrad, min(limGrad, derGrad_R0 - teta*lamda_1(n)*(1/DeltaTM)*Ttm - lamda_2(n)*(1/DeltaDT)*Tdt - teta*lamda_3(n, bV+ 0)*beta*Wavg*exp(-Rtilde(n, bV+0))));
     
 if(Imax>=0)  %~Imax<0)
  if(Imax~=0)
@@ -334,7 +337,11 @@ if(Imax>=0)  %~Imax<0)
     derGrad_R1_Tdt = -S*M0*exp(-Rtilde(n, bV+0))*Wavg^(1+Imax)*(1-delta_f(1+Imax))*exp(-Rtilde(n, bV+Imax+1)-S*Rtilde(n, bV+1)-(1-delta_f(Q-1))*S*sum_f(Rtilde(n, :), 1, Q-1, S));
     derGrad_R1_en = -teta*K0*M0*exp(-Rtilde(n, bV+0))*(S*Wavg^(1+Imax)*exp((alfa_Pw-1)*Rtilde(n, bV+Imax+1)-S*Rtilde(n, bV+1)-(1-delta_f(Q-1))*S*(sum_f(Rtilde(n,:) ,1,Q-1,S))) + ...+
         (1-delta_f(Imax))*(sumDerGradR1b));
-    gradRtildetemp(bV+(1:S)) = derGrad_R1_en + lamda_1(n)*teta*(1/DeltaTM)*derGrad_R1_Ttm + lamda_2(n)*(1/DeltaDT)*derGrad_R1_Tdt - lamda_3(n, bV+ 1)*teta*beta*Wavg*exp(-Rtilde(n, bV+1));
+    
+    % AGGIORNAMENTO limitazione dei tre valori dellederivate precedenti
+    %derGrad_R1_Ttm = derGrad_R1_Ttm
+    % Update aggiungo limite gradienti
+    gradRtildetemp(bV+(1:S)) =  max(-limGrad, min(limGrad,  derGrad_R1_en + lamda_1(n)*teta*(1/DeltaTM)*derGrad_R1_Ttm + lamda_2(n)*(1/DeltaDT)*derGrad_R1_Tdt - lamda_3(n, bV+ 1)*teta*beta*Wavg*exp(-Rtilde(n, bV+1))));
     
     % ------- Ri
     for j=1:Q-1 % ???
@@ -355,8 +362,9 @@ if(Imax>=0)  %~Imax<0)
             (1-delta_f(Imax))*( sumDerGradRi_a ));
         derGrad_Ri_en = teta*K0*M0*exp(-Rtilde(n, bV+0))*(-(1-delta_f(Q-1))*(Wavg^(1+Imax))*S*exp((alfa_Pw-1)*Rtilde(n, bV+Imax+1)-S*Rtilde(n, bV+1)-(1-delta_f(Q-1))*S*(sum_f(Rtilde(n, :),1,Q-1,S))) + ...+
             (1-delta_f(Imax))*(sumDerGradRi_b));
+        % update aggiunto limite gradiente 
         %GRADIENTE j
-        gradRtildetemp(bV+((j*S+1):((j+1)*S))) = derGrad_Ri_en + lamda_1(n)*(1/DeltaTM) *teta*derGrad_Ri_Ttm + lamda_2(n)*(1/DeltaDT) * derGrad_Ri_Tdt - lamda_3(n, bV+j*S+1)*teta*beta*Wavg*exp(-Rtilde(n, bV+j*S+1)) ;
+        gradRtildetemp(bV+((j*S+1):((j+1)*S))) =  max(-limGrad, min(limGrad,  derGrad_Ri_en + lamda_1(n)*(1/DeltaTM) *teta*derGrad_Ri_Ttm + lamda_2(n)*(1/DeltaDT) * derGrad_Ri_Tdt - lamda_3(n, bV+j*S+1)*teta*beta*Wavg*exp(-Rtilde(n, bV+j*S+1)) ));
     end
  end% Imax~=0
  
@@ -364,8 +372,9 @@ if(Imax>=0)  %~Imax<0)
     derGrad_RImax_Ttm = -M0*(Wavg^(1+Imax))*exp(-Rtilde(n, bV+0))*exp(-Rtilde(n, bV+Imax+1)-S*Rtilde(n, bV+1)-(1-delta_f(Q-1))*S*sum_f(Rtilde(n,:), 1, Q-1, S));
     derGrad_RImax_Tdt = -M0*exp(-Rtilde(n, bV+0))*Wavg^(1+Imax)*(1-delta_f(1+Imax))*exp(-Rtilde(n, bV+Imax+1)-S*Rtilde(n, bV+1)-(1-delta_f(Q-1))*S*sum_f(Rtilde(n,:), 1, Q-1, S));
     derGrad_RImax_en = teta*K0*M0*Wavg^(1+Imax)*exp(-Rtilde(n, bV+0))*(alfa_Pw-1)*exp((alfa_Pw-1)*Rtilde(n, bV+Imax+1)-S*Rtilde(n, bV+1)-(1-delta_f(Q-1))*S*(sum_f(Rtilde(n,:),1,Q-1,S)));
-    
-    gradRtildetemp(bV+Imax+1) = derGrad_RImax_en + lamda_1(n)*teta*(1/DeltaTM)*derGrad_RImax_Ttm + lamda_2(n)*(1/DeltaDT) * derGrad_RImax_Tdt;
+     % update aggiunto limite gradiente
+     % Imax+1
+    gradRtildetemp(bV+Imax+1) =  max(-limGrad, min(limGrad, derGrad_RImax_en + lamda_1(n)*teta*(1/DeltaTM)*derGrad_RImax_Ttm + lamda_2(n)*(1/DeltaDT) * derGrad_RImax_Tdt));
 end % Imax>0
     % ----------------------------------------
     % ------------- END NUOVI TCBM GRAD------
