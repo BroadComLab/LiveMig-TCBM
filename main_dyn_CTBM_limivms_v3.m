@@ -17,7 +17,7 @@ clear all
 clc
 
 % ----- COSTANTS
-TOU_UPDATE  =   0;  % { 0 = koushner  --> verificato
+TOU_UPDATE  =   3;  % { 0 = koushner  --> verificato
                     %   1 = our vers 2
                     %   2 = fast update k/n 
                     %   3 = update v3 da multipath-tpc }
@@ -452,7 +452,8 @@ end % Imax>0
 if ENE_SELECTNEW == 0
     sumEi = 0;
     for i=2:Imax+2
-        sumEi = sumEi + K0*M0*C(i)*(R_i(n,i)^(alfa_Pw-1))*prod(min(R_i(n, 1:i-1).^(-1), 10^-10));
+        %sumEi = sumEi + K0*M0*C(i)*(R_i(n,i)^(alfa_Pw-1))*prod((R_i(n, 1:i-1).^(-1)));% ATTENZIONE CAMBIATO min(R_i(n, 1:i-1).^(-1), 10^-10))
+        sumEi = sumEi + K0*M0*C(i)*(R_i(n,i)^(alfa_Pw-1))*prod(max(R_i(n, 1:i-1).^(-1), 10^-20));%
     end
     En_i(n) = (K0*M0*(R_i(n,1))^(alfa_Pw-1) + teta * (sumEi) + Esetup);
 end
