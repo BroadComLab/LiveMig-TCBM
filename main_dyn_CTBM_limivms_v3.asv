@@ -17,7 +17,7 @@ clear all
 clc
 
 % ----- COSTANTS
-TOU_UPDATE  =   0;  % { 0 = koushner  --> verificato
+TOU_UPDATE  =   3;  % { 0 = koushner  --> verificato
                     %   1 = our vers 2
                     %   2 = fast update k/n 
                     %   3 = update v3 da multipath-tpc }
