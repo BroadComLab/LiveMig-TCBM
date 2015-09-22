@@ -23,24 +23,24 @@ TOU_UPDATE  =   3;  % { 0 = koushner  --> verificato
                     %   3 = update v3 da multipath-tpc }
 PLOT_FIG    =   1;
 
-ENE_SELECTNEW = 0;  % new energy = 1
+ENE_SELECTNEW = 1;  % new energy = 1
 
 % -------------------------------------------------------------------
 % ----- VARIABLES --------------------------------------------------
-Imax        =   31;              % Final round index
-N0          =   5*10^4;         % Iteration index [] 
+Imax        =   3;              % Final round index
+N0          =   5*10^3;         % Iteration index [] 
 Wavg        =   3;              % dirty bit rate Mbit/sec
 Cmax        =   1;              % max utilizzation of the overall available basndwidth  Cmax  [0,1]
 Rmax        =   30;             % Mb/s    % Max transmission bandwidth allowed 
 K0          =   1.2*10^-3;  % 1.8*10^(-3) Watt*[s/Mbit]^alfa communication pw % Power wasted for Ri 
 alfa_Pw     =   2;              % exponent power-rate
-M0          =   1024;            % size of memory [Mega bit] 
+M0          =   256;            % size of memory [Mega bit] 
 Esetup      =   3*10^-4;%; per il wifi %% energy wasted by connection setim phase Joule 
 gamma       =   1000;           % buono tra 100 e 1000
-amax        =   0.01;      %2*10^(-4);%5*10^(-7);% buono tra 5*10(-7) e 10^(-6)
+amax        =   0.05;      %2*10^(-4);%5*10^(-7);% buono tra 5*10(-7) e 10^(-6)
 passoTou    =   100;
-DeltaTM     =   237;%2*10^200;%141;%2*10^300;%94.6;%21.33;%2*10^600;2*10^300;       %0.17*10^(1); % maximum tolerated Time Migration
-DeltaDT     =   2.5*10^(-10);%10^200;%10^300;%0.1; %1.17*10^-3;%19.31;%10^600;         %11.63636364; % maximum tolerated down-time
+DeltaTM     =   117;%2*10^200;%141;%2*10^300;%94.6;%21.33;%2*10^600;2*10^300;       %0.17*10^(1); % maximum tolerated Time Migration
+DeltaDT     =   0.06;%10^200;%10^300;%0.1; %1.17*10^-3;%19.31;%10^600;         %11.63636364; % maximum tolerated down-time
 beta        =   0;            %1.05; %1.2; %beta_i(1);
 
 % ris r0 = 11 lamda 1= 0 lamda2 1689.6 
@@ -55,7 +55,7 @@ elseif(Imax==0)
 else
     teta = 1;
     % ----- DATI TC-BM ######
-    Q = 1;%Imax;   %number of round head 
+    Q = Imax;   %number of round head 
     S = Imax/Q;
     % -------------  ########
     if(Q>Imax || Q<1 || rem(Q,1)~=0 || (rem(S,1)~=0 && Imax>=1))
@@ -453,7 +453,7 @@ if ENE_SELECTNEW == 0
     sumEi = 0;
     for i=2:Imax+2
         %sumEi = sumEi + K0*M0*C(i)*(R_i(n,i)^(alfa_Pw-1))*prod((R_i(n, 1:i-1).^(-1)));% ATTENZIONE CAMBIATO min(R_i(n, 1:i-1).^(-1), 10^-10))
-        sumEi = sumEi + K0*M0*C(i)*(R_i(n,i)^(alfa_Pw-1))*prod(max(R_i(n, 1:i-1).^(-1), 10^-20));%
+        sumEi = sumEi + K0*M0*C(i)*(R_i(n,i)^(alfa_Pw-1))*prod(R_i(n, 1:i-1).^(-1));%max(R_i(n, 1:i-1).^(-1), 10^-20));%
     end
     En_i(n) = (K0*M0*(R_i(n,1))^(alfa_Pw-1) + teta * (sumEi) + Esetup);
 end
