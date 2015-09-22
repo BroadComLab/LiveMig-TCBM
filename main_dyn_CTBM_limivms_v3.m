@@ -453,7 +453,7 @@ if ENE_SELECTNEW == 0
     sumEi = 0;
     for i=2:Imax+2
         %sumEi = sumEi + K0*M0*C(i)*(R_i(n,i)^(alfa_Pw-1))*prod((R_i(n, 1:i-1).^(-1)));% ATTENZIONE CAMBIATO min(R_i(n, 1:i-1).^(-1), 10^-10))
-        sumEi = sumEi + K0*M0*C(i)*(R_i(n,i)^(alfa_Pw-1))*prod(R_i(n, 1:i-1).^(-1));%max(R_i(n, 1:i-1).^(-1), 10^-20));%
+        sumEi = sumEi + K0*M0*C(i)*(R_i(n,i)^(alfa_Pw-1))*max(R_i(n, 1:i-1).^(-1), 10^-20);%
     end
     En_i(n) = (K0*M0*(R_i(n,1))^(alfa_Pw-1) + teta * (sumEi) + Esetup);
 end
